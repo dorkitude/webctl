@@ -53,7 +53,7 @@ webctl config path
 
 ## Keys
 
-`~/secrets/keys.json` (mode 0600), shared with other tools; fields this tool does not know are preserved. Fields: `jev_api_key`, `exa_api_key`, `parallel_api_key`, `sonar_api_key`, `youcom_api_key`, `brave_api_key`, `tavily_api_key`, `firecrawl_api_key`, `keenable_api_key`, `serpbase_api_key`, `serply_api_key`, `searxng_url`, `degoog_url`. Environment overrides: the same names upper-cased without the `_api` (`JEV_API_KEY`, `EXA_API_KEY`, ... `SEARXNG_URL`, `DEGOOG_URL`); see `providers` for the full table.
+`~/secrets/keys.json` (mode 0600), shared with other tools; fields this tool does not know are preserved. Fields: `jev_api_key`, `exa_api_key`, `parallel_api_key`, `sonar_api_key`, `youcom_api_key`, `brave_api_key`, `tavily_api_key`, `linkup_api_key`, `firecrawl_api_key`, `keenable_api_key`, `serpbase_api_key`, `serply_api_key`, `searxng_url`, `degoog_url`. Environment overrides: the same names upper-cased without the `_api` (`JEV_API_KEY`, `EXA_API_KEY`, ... `SEARXNG_URL`, `DEGOOG_URL`); see `providers` for the full table.
 
 ```
 webctl setup                  # interactive wizard, validates each key

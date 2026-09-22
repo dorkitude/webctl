@@ -20,6 +20,7 @@ const (
 	Youcom    Name = "youcom"
 	Brave     Name = "brave"
 	Tavily    Name = "tavily"
+	Linkup    Name = "linkup"
 	Firecrawl Name = "firecrawl"
 	Keenable  Name = "keenable"
 	SerpBase  Name = "serpbase"
@@ -42,6 +43,7 @@ var specs = map[Name]spec{
 	Youcom:    {"YOUCOM_API_KEY", "You.com", "https://you.com/platform/api-keys", false},
 	Brave:     {"BRAVE_API_KEY", "Brave Search (recommended: 5,000 free searches/month)", "https://brave.com/search/api/", false},
 	Tavily:    {"TAVILY_API_KEY", "Tavily", "https://app.tavily.com", false},
+	Linkup:    {"LINKUP_API_KEY", "Linkup", "https://app.linkup.so", false},
 	Firecrawl: {"FIRECRAWL_API_KEY", "Firecrawl", "https://www.firecrawl.dev", false},
 	Keenable:  {"KEENABLE_API_KEY", "Keenable", "https://keenable.ai", false},
 	SerpBase:  {"SERPBASE_API_KEY", "SerpBase", "https://serpbase.dev", false},
@@ -54,7 +56,7 @@ var specs = map[Name]spec{
 // SearchProviders lists the slots that correspond to search providers, in
 // the order setup offers them. SearXNG and Degoog hold instance URLs rather
 // than secrets; DuckDuckGo and ketch need nothing and have no slot.
-var SearchProviders = []Name{Brave, Exa, Parallel, Sonar, Youcom, Tavily, Firecrawl, Keenable, SerpBase, Serply, SearXNG, Degoog}
+var SearchProviders = []Name{Brave, Exa, Parallel, Sonar, Youcom, Tavily, Linkup, Firecrawl, Keenable, SerpBase, Serply, SearXNG, Degoog}
 
 // All lists every key name, search providers first.
 var All = append(append([]Name{}, SearchProviders...), Jev)
@@ -101,6 +103,7 @@ type Store struct {
 	YoucomAPIKey    string `json:"youcom_api_key,omitempty"`
 	BraveAPIKey     string `json:"brave_api_key,omitempty"`
 	TavilyAPIKey    string `json:"tavily_api_key,omitempty"`
+	LinkupAPIKey    string `json:"linkup_api_key,omitempty"`
 	FirecrawlAPIKey string `json:"firecrawl_api_key,omitempty"`
 	KeenableAPIKey  string `json:"keenable_api_key,omitempty"`
 	SerpBaseAPIKey  string `json:"serpbase_api_key,omitempty"`
@@ -125,6 +128,8 @@ func (s *Store) slot(name Name) *string {
 		return &s.BraveAPIKey
 	case Tavily:
 		return &s.TavilyAPIKey
+	case Linkup:
+		return &s.LinkupAPIKey
 	case Firecrawl:
 		return &s.FirecrawlAPIKey
 	case Keenable:

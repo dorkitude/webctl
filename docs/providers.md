@@ -1,6 +1,6 @@
 # Providers
 
-Fourteen search backends. Jev, the filter, is the one key you must have; every search backend is optional.
+Fifteen search backends. Jev, the filter, is the one key you must have; every search backend is optional.
 
 ## Order
 
@@ -8,7 +8,7 @@ Providers are taken in this order, skipping any that are cooling down (see `cool
 
 1. A `provider` set in config, if any.
 2. Your own metasearch: `searxng`, then `degoog`, when their URLs are set.
-3. Providers you set a key for, in the order brave, exa, parallel, sonar, youcom, tavily, firecrawl, keenable, serpbase, serply. Brave is the author's pick: 5,000 free searches a month with a key, about 130 ms per query.
+3. Providers you set a key for, in the order brave, exa, parallel, sonar, youcom, tavily, linkup, firecrawl, keenable, serpbase, serply. Brave is the author's pick: 5,000 free searches a month with a key, about 130 ms per query.
 4. Only when no key is set at all: the hosted keyless endpoints `parallel`, `exa`, `keenable`, `youcom`, `firecrawl`, then `ddg`. Each throttles by IP after a few dozen queries a day; cooldowns rotate past the throttled ones.
 
 Setting a key is a choice of engine: as soon as one exists, the free tiers leave the chain. With one key and `sources: 3`, one provider answers.
@@ -31,6 +31,7 @@ Setting a key is a choice of engine: as soon as one exists, the free tiers leave
 | `sonar` | no | `sonar` | `SONAR_API_KEY` | Perplexity; runs an LLM, 90s timeout |
 | `brave` | no | `brave` | `BRAVE_API_KEY` | recommended; up to 20 results per query, 50/s; free tier of 5,000 searches a month, then $5 per 1,000 |
 | `tavily` | no | `tavily` | `TAVILY_API_KEY` | agent-oriented, results carry extracted text; 1,000 credits a month free, a basic search is 1 credit, 1/s |
+| `linkup` | no | `linkup` | `LINKUP_API_KEY` | agent search; results carry page text; `fast` + `searchResults` is $5 per 1,000 |
 | `firecrawl` | hosted, IP-gated (often 429/403) | `firecrawl` | `FIRECRAWL_API_KEY` | v2 search; a key lifts the gate; a self-hosted URL is not supported here |
 | `keenable` | yes, hourly cap | `keenable` | `KEENABLE_API_KEY` | index built for agents; ~1.8K-char page text per result; no result count parameter |
 | `serpbase` | no | `serpbase` | `SERPBASE_API_KEY` | Google results; about 10 per request; business errors arrive as HTTP 200 with status 1001 (bad key), 1020 (credits), 1029 (rate limited) and are mapped to 401/402/429 |
@@ -51,4 +52,4 @@ Or the environment variable from the table, or `setup` for a guided pass over al
 
 ## What Jev sees
 
-Each result reaches Jev as title, URL, and a snippet of up to 600 characters. When a provider returns page text (Exa, Parallel, Tavily, Keenable, ketch), the snippet starts at the first line that reads like prose, skipping navigation and bylines, and the full excerpt is kept as `content`: it stands in for a page that cannot be scraped and feeds the near-duplicate pass.
+Each result reaches Jev as title, URL, and a snippet of up to 600 characters. When a provider returns page text (Exa, Parallel, Tavily, Linkup, Keenable, ketch), the snippet starts at the first line that reads like prose, skipping navigation and bylines, and the full excerpt is kept as `content`: it stands in for a page that cannot be scraped and feeds the near-duplicate pass.

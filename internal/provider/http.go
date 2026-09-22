@@ -40,7 +40,7 @@ func (e *APIError) Error() string {
 
 // keySlug is the `keys set` name for keyed providers, "" for the rest.
 func (e *APIError) keySlug() string {
-	return map[string]string{"Exa": "exa", "Parallel": "parallel", "You.com": "youcom", "Sonar": "sonar", "Brave": "brave", "Tavily": "tavily",
+	return map[string]string{"Exa": "exa", "Parallel": "parallel", "You.com": "youcom", "Sonar": "sonar", "Brave": "brave", "Tavily": "tavily", "Linkup": "linkup",
 		"Firecrawl": "firecrawl", "Keenable": "keenable", "SerpBase": "serpbase", "Serply": "serply"}[e.Provider]
 }
 

@@ -31,6 +31,15 @@ func TestBraveTavilyFirecrawlKeenableSerpBaseSerplyDegoog(t *testing.T) {
 		t.Errorf("tavily: %+v %v %v", got, err, c.Body)
 	}
 
+	srv, c = serve(t, 200, `{"results":[{"name":"L","url":"https://l","content":"Extracted page text long enough to read as a sentence of prose here.","type":"text"},{"name":"pic","url":"https://img","type":"image"},{"name":"","url":"https://skip"}]}`)
+	got, err = NewLinkup("lk", Options{BaseURL: srv.URL}).Search(ctx, "q", 5)
+	if err != nil || len(got) != 1 || got[0].URL != "https://l" || got[0].Content == "" || c.Headers.Get("Authorization") != "Bearer lk" || c.Path != "/v1/search" || c.Body["q"] != "q" || c.Body["depth"] != "fast" || c.Body["outputType"] != "searchResults" || c.Body["maxResults"] != float64(5) {
+		t.Errorf("linkup: %+v %v %v %s", got, err, c.Body, c.Path)
+	}
+	if _, err := New("linkup", "", Options{}); err == nil || !strings.Contains(err.Error(), "empty") {
+		t.Errorf("linkup without a key = %v", err)
+	}
+
 	srv, c = serve(t, 200, `{"success":true,"data":{"web":[{"title":"F","url":"https://f","description":"desc"}]}}`)
 	got, err = NewFirecrawl("", Options{BaseURL: srv.URL}).Search(ctx, "q", 5)
 	if err != nil || len(got) != 1 || c.Headers.Get("Authorization") != "" || c.Path != "/v2/search" {

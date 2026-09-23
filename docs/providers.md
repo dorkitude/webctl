@@ -1,6 +1,6 @@
 # Providers
 
-Fourteen search backends. Jev, the filter, is the one key you must have; every search backend is optional.
+Fifteen search backends. Jev, the filter, is the one key you must have; every search backend is optional.
 
 ## Order
 
@@ -8,7 +8,7 @@ Providers are taken in this order, skipping any that are cooling down (see `cool
 
 1. A `provider` set in config, if any.
 2. Your own metasearch: `searxng`, then `degoog`, when their URLs are set.
-3. Providers you set a key for, in the order brave, exa, parallel, sonar, youcom, tavily, firecrawl, keenable, serpbase, serply. Brave is the author's pick: 5,000 free searches a month with a key, about 130 ms per query.
+3. Providers you set a key for, in the order brave, exa, parallel, sonar, youcom, tavily, firecrawl, keenable, serpbase, serply, keiro. Brave is the author's pick: 5,000 free searches a month with a key, about 130 ms per query.
 4. Only when no key is set at all: the hosted keyless endpoints `parallel`, `exa`, `keenable`, `youcom`, `firecrawl`, then `ddg`. Each throttles by IP after a few dozen queries a day; cooldowns rotate past the throttled ones.
 
 Setting a key is a choice of engine: as soon as one exists, the free tiers leave the chain. With one key and `sources: 3`, one provider answers.
@@ -35,6 +35,7 @@ Setting a key is a choice of engine: as soon as one exists, the free tiers leave
 | `keenable` | yes, hourly cap | `keenable` | `KEENABLE_API_KEY` | index built for agents; ~1.8K-char page text per result; no result count parameter |
 | `serpbase` | no | `serpbase` | `SERPBASE_API_KEY` | Google results; about 10 per request; business errors arrive as HTTP 200 with status 1001 (bad key), 1020 (credits), 1029 (rate limited) and are mapped to 401/402/429 |
 | `serply` | no | `serply` | `SERPLY_API_KEY` | Google results; at most 10 per request |
+| `keiro` | no | `keiro` | `KEIRO_API_KEY` | agent-oriented v2 API; always-fresh index search at about 1s; free tier of 10 queries a minute, then pay-per-query; up to 50 results per request |
 
 Keyed use of a provider promotes it into the chain and lifts the keyless caps. Setting a key clears that provider's cooldown. `keys validate` makes one lightweight call per configured provider.
 

@@ -53,14 +53,14 @@ const SonarTimeout = 90 * time.Second
 // Names returns the supported provider names in auto-chain order: keyed
 // providers first, then the keyless fallbacks.
 func Names() []string {
-	return []string{"exa", "parallel", "sonar", "youcom", "brave", "tavily", "firecrawl", "keenable", "serpbase", "serply", "ketch", "ddg", "searxng", "degoog"}
+	return []string{"exa", "parallel", "sonar", "youcom", "brave", "tavily", "firecrawl", "keenable", "serpbase", "serply", "keiro", "ketch", "ddg", "searxng", "degoog"}
 }
 
 // Keyed lists the providers that require an API key.
 // Exa, Parallel, You.com, Firecrawl, and Keenable also run keyless when
 // named explicitly.
 func Keyed() []string {
-	return []string{"brave", "exa", "parallel", "sonar", "youcom", "tavily", "firecrawl", "keenable", "serpbase", "serply"}
+	return []string{"brave", "exa", "parallel", "sonar", "youcom", "tavily", "firecrawl", "keenable", "serpbase", "serply", "keiro"}
 }
 
 // Normalize lowercases and trims a provider name, resolving aliases.
@@ -141,6 +141,8 @@ func New(name, cred string, opts Options) (Provider, error) {
 		return NewSerpBase(cred, opts), nil
 	case "serply":
 		return NewSerply(cred, opts), nil
+	case "keiro":
+		return NewKeiro(cred, opts), nil
 	}
 	names := Names()
 	sort.Strings(names)

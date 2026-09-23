@@ -86,3 +86,19 @@ func TestBraveTavilyFirecrawlKeenableSerpBaseSerplyDegoog(t *testing.T) {
 		t.Errorf("brave 429 = %v", err)
 	}
 }
+
+func TestKeiro(t *testing.T) {
+	ctx := context.Background()
+
+	srv, c := serve(t, 200, `{"results":[{"title":"K","url":"https://k","snippet":"A snippet of page text long enough to read as prose."},{"title":"","url":"https://skip"},{"title":"K2","url":"https://k2"}]}`)
+	got, err := NewKeiro("kk", Options{BaseURL: srv.URL}).Search(ctx, "q", 30)
+	if err != nil || len(got) != 2 || got[0].URL != "https://k" || got[0].Snippet == "" || c.Headers.Get("Authorization") != "Bearer kk" || c.Path != "/api/v2/search/fast" || c.Body["maxResults"] != float64(30) {
+		t.Errorf("keiro: %+v %v %v", got, err, c.Body)
+	}
+
+	// A rejected key surfaces as 401 the chain understands.
+	srv, _ = serve(t, http.StatusUnauthorized, `{"error":"Invalid API key"}`)
+	if _, err := NewKeiro("kk", Options{BaseURL: srv.URL}).Search(ctx, "q", 5); !IsUnauthorized(err) {
+		t.Errorf("keiro 401 = %v", err)
+	}
+}

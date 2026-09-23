@@ -24,6 +24,7 @@ const (
 	Keenable  Name = "keenable"
 	SerpBase  Name = "serpbase"
 	Serply    Name = "serply"
+	Keiro     Name = "keiro"
 	SearXNG   Name = "searxng"
 	Degoog    Name = "degoog"
 	Jev       Name = "jev"
@@ -46,6 +47,7 @@ var specs = map[Name]spec{
 	Keenable:  {"KEENABLE_API_KEY", "Keenable", "https://keenable.ai", false},
 	SerpBase:  {"SERPBASE_API_KEY", "SerpBase", "https://serpbase.dev", false},
 	Serply:    {"SERPLY_API_KEY", "Serply", "https://serply.io", false},
+	Keiro:     {"KEIRO_API_KEY", "KeiroLabs", "https://platform.keirolabs.cloud", false},
 	SearXNG:   {"SEARXNG_URL", "SearXNG URL", "https://docs.searxng.org", true},
 	Degoog:    {"DEGOOG_URL", "Degoog URL", "https://github.com/degoog-org/degoog", true},
 	Jev:       {"JEV_API_KEY", "Jev (TypeSafe)", "https://typesafe.ai", false},
@@ -54,7 +56,7 @@ var specs = map[Name]spec{
 // SearchProviders lists the slots that correspond to search providers, in
 // the order setup offers them. SearXNG and Degoog hold instance URLs rather
 // than secrets; DuckDuckGo and ketch need nothing and have no slot.
-var SearchProviders = []Name{Brave, Exa, Parallel, Sonar, Youcom, Tavily, Firecrawl, Keenable, SerpBase, Serply, SearXNG, Degoog}
+var SearchProviders = []Name{Brave, Exa, Parallel, Sonar, Youcom, Tavily, Firecrawl, Keenable, SerpBase, Serply, Keiro, SearXNG, Degoog}
 
 // All lists every key name, search providers first.
 var All = append(append([]Name{}, SearchProviders...), Jev)
@@ -105,6 +107,7 @@ type Store struct {
 	KeenableAPIKey  string `json:"keenable_api_key,omitempty"`
 	SerpBaseAPIKey  string `json:"serpbase_api_key,omitempty"`
 	SerplyAPIKey    string `json:"serply_api_key,omitempty"`
+	KeiroAPIKey     string `json:"keiro_api_key,omitempty"`
 	SearXNGURL      string `json:"searxng_url"`
 	DegoogURL       string `json:"degoog_url,omitempty"`
 	JevAPIKey       string `json:"jev_api_key"`
@@ -133,6 +136,8 @@ func (s *Store) slot(name Name) *string {
 		return &s.SerpBaseAPIKey
 	case Serply:
 		return &s.SerplyAPIKey
+	case Keiro:
+		return &s.KeiroAPIKey
 	case SearXNG:
 		return &s.SearXNGURL
 	case Degoog:

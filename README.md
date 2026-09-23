@@ -286,7 +286,7 @@ Chain order: your `searxng` or `degoog` if set, then the providers you set a key
 
 | keyless | keyed |
 |---|---|
-| `exa`, `parallel`, `keenable`, `youcom`, `firecrawl` (throttled by IP), `ddg`, `searxng` and `degoog` (your instances), `ketch` (if installed, via `-p`) | `exa`, `parallel`, `sonar`, `youcom`, `brave`, `tavily`, `firecrawl`, `keenable`, `serpbase`, `serply` |
+| `exa`, `parallel`, `keenable`, `youcom`, `firecrawl` (throttled by IP), `ddg`, `searxng` and `degoog` (your instances), `ketch` (if installed, via `-p`) | `exa`, `parallel`, `sonar`, `youcom`, `brave`, `tavily`, `firecrawl`, `keenable`, `serpbase`, `serply`, `keiro` |
 
 ```bash
 webctl keys set brave        # a key puts the provider in the chain

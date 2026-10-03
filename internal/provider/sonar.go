@@ -119,12 +119,13 @@ func (s *Sonar) Search(ctx context.Context, query string, numResults int) ([]Sea
 	return out, nil
 }
 
-// Validate implements Provider with a minimal one-token completion.
+// Validate implements Provider with a minimal completion. Perplexity
+// rejects max_tokens below 16, so use the API minimum.
 func (s *Sonar) Validate(ctx context.Context) error {
 	req := sonarRequest{
 		Model:     SonarModel,
 		Messages:  []sonarMessage{{Role: "user", Content: "hello"}},
-		MaxTokens: 1,
+		MaxTokens: 16,
 	}
 	return postJSON(ctx, s.client, "Sonar", s.baseURL+"/chat/completions", s.headers(), req, nil)
 }

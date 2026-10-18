@@ -6,13 +6,37 @@ before:
     - go mod tidy
 
 builds:
-  - main: ./cmd/webctl
+  - id: webctl
+    main: ./cmd/webctl
     binary: webctl
     env: [CGO_ENABLED=0]
     goos: [linux, darwin]
     goarch: [amd64, arm64]
     ldflags:
       - -s -w -X github.com/dorkitude/webctl/cmd/webctl/cli.version={{ .Version }}
+
+# One macOS binary for Apple Silicon and Intel (webctl_X_darwin_all.tar.gz),
+# which the Homebrew cask installs. The per-arch darwin archives stay for npm.
+universal_binaries:
+  - id: webctl
+    ids: [webctl]
+    replace: false
+
+# Sign the macOS binaries with the Developer ID certificate and notarize them
+# with Apple (runs on Linux via quill). Skipped when the secrets are absent.
+notarize:
+  macos:
+    - enabled: '{{ isEnvSet "MACOS_SIGN_P12" }}'
+      ids: [webctl]
+      sign:
+        certificate: "{{.Env.MACOS_SIGN_P12}}"
+        password: "{{.Env.MACOS_SIGN_PASSWORD}}"
+      notarize:
+        issuer_id: "{{.Env.MACOS_NOTARY_ISSUER_ID}}"
+        key_id: "{{.Env.MACOS_NOTARY_KEY_ID}}"
+        key: "{{.Env.MACOS_NOTARY_KEY}}"
+        wait: true
+        timeout: 20m
 
 archives:
   - formats: [tar.gz]
@@ -47,12 +71,8 @@ homebrew_casks:
     commit_author:
       name: goreleaser
       email: kyle@kylewild.com
-    hooks:
-      post:
-        install: |
-          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/webctl"]
-          end
+    # The macOS binary is signed and notarized, so the cask needs no
+    # quarantine workaround (the old postflight hook is deprecated).
 
 release:
   github:

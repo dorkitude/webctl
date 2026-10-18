@@ -261,8 +261,8 @@ func TestSonarValidate(t *testing.T) {
 	if err := p.Validate(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if c.Body["max_tokens"] != float64(1) {
-		t.Errorf("validate should cap max_tokens at 1, got %v", c.Body["max_tokens"])
+	if c.Body["max_tokens"] != float64(16) {
+		t.Errorf("validate should cap max_tokens at Perplexity's minimum, 16, got %v", c.Body["max_tokens"])
 	}
 }
 

@@ -2,10 +2,16 @@ name: release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to (re)publish to npm, e.g. v0.1.8
+        required: true
 permissions:
   contents: write
 jobs:
   release:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,12 +36,31 @@ jobs:
           APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
           TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
         run: scripts/publish-apt.sh dist
+
+  # Published with npm trusted publishing (OIDC): npmjs.com trusts this
+  # workflow file in dorkitude/webctl, so no NPM_TOKEN is stored, and each
+  # version gets a provenance attestation. Runs after the GitHub release
+  # exists, since install.js downloads the binary from it. To publish an
+  # existing tag again, run this workflow by hand with that tag.
+  npm:
+    needs: release
+    if: ${{ !cancelled() && (needs.release.result == 'success' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ env.TAG }}" }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
       - name: Publish npm package
-        if: ${{ env.NPM_TOKEN != '' }}
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        working-directory: npm
         run: |
-          cd npm
-          npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          npm install -g npm@latest
+          npm version "${TAG#v}" --no-git-tag-version
           npm publish --access public

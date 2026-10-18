@@ -162,6 +162,13 @@ sudo apt update && sudo apt install webctl
 npm install -g webctl
 ```
 
+The package downloads the release binary for your platform and checks it
+against the release's `checksums.txt`. If npm skips install scripts
+(`--ignore-scripts`, or a policy that blocks them), the first `webctl` run
+downloads it instead, to `~/.cache/webctl/<version>/` (or
+`$XDG_CACHE_HOME/webctl/<version>/`). Each version is published from CI with
+npm provenance.
+
 ### go install
 
 ```bash

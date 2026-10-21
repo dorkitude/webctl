@@ -93,12 +93,12 @@ func TestSplitLargePageIsChunkSized(t *testing.T) {
 	}
 }
 
-func TestOverlapIsTwentyPercent(t *testing.T) {
-	if got := Overlap(2000); got != 400 {
-		t.Errorf("Overlap(2000) = %d, want 400", got)
+func TestOverlapIsTenPercent(t *testing.T) {
+	if got := Overlap(2000); got != 200 {
+		t.Errorf("Overlap(2000) = %d, want 200", got)
 	}
-	if got := Overlap(500); got != 100 {
-		t.Errorf("Overlap(500) = %d, want 100", got)
+	if got := Overlap(500); got != 50 {
+		t.Errorf("Overlap(500) = %d, want 50", got)
 	}
 	if got := Overlap(0); got != Overlap(DefaultChunkChars) {
 		t.Errorf("Overlap(0) = %d, want the default's", got)
@@ -143,8 +143,8 @@ func TestOverlapTailsStayWithinBudget(t *testing.T) {
 	}
 	for i := 1; i < len(chunks); i++ {
 		n := utf8.RuneCountInString(tails[i])
-		if n == 0 || n > 400 {
-			t.Fatalf("chunk %d: tail of %d runes, want 1..400", i, n)
+		if n == 0 || n > 200 {
+			t.Fatalf("chunk %d: tail of %d runes, want 1..200", i, n)
 		}
 		if !strings.HasSuffix(chunks[i-1], tails[i]) {
 			t.Fatalf("chunk %d: tail is not the end of the previous chunk", i)

@@ -84,7 +84,7 @@ func addSearchFlags(cmd *cobra.Command) {
 	f.BoolVar(&sf.scrape, "scrape", false, "fetch page text for the top results; use with --filter-chunks whenever you would otherwise read a whole page")
 	f.BoolVar(&sf.chunks, "filter-chunks", false, "with --scrape, return only the chunks Jev finds relevant to the goal")
 	f.IntVar(&sf.maxChars, "max-chars", scrape.DefaultMaxChars, "with --scrape, cap text per page")
-	f.IntVar(&sf.chunkChars, "chunk-chars", scrape.DefaultChunkChars, "with --filter-chunks, chunk size in characters; judged with 20% overlap")
+	f.IntVar(&sf.chunkChars, "chunk-chars", scrape.DefaultChunkChars, "with --filter-chunks, chunk size in characters; judged with 10% overlap")
 	f.IntVar(&sf.scrapeTop, "scrape-top", DefaultScrapeTop, "with --scrape, fetch only the N best-scoring kept results; 0 = all")
 	f.BoolVar(&sf.summarize, "summarize", false, "with --scrape, replace each page's kept text with a short summary from a small model (see `webctl docs summarize`)")
 	f.StringVar(&sf.sumCommand, "summarize-command", "", "summarizer command for this run, e.g. 'claude -p --model haiku' (overrides summarize.command)")

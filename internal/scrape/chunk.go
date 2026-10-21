@@ -116,7 +116,10 @@ func Join(chunks []string) string {
 // OverlapFraction is the share of a chunk's size that is carried over from
 // the previous chunk when a chunk is judged, so a heading or sentence cut at
 // a boundary is still seen with what follows it.
-const OverlapFraction = 0.2
+// Ten percent is the boundary context measured by Skimmer's eval suite: it
+// preserved recall across a full-overlap boundary shift without paying for
+// more repeated input than needed.
+const OverlapFraction = 0.1
 
 // Overlap returns the overlap length in runes for a chunk size.
 func Overlap(chunkChars int) int {

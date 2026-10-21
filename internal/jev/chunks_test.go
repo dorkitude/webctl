@@ -23,7 +23,7 @@ func TestFilterChunksBatchesOnePage(t *testing.T) {
 		return 200, SystemOneResponse{Answers: answers, Usage: Usage{InputTokens: 300, OutputTokens: 3}}
 	})
 	chunks := textChunks("Transformers use attention.", "Subscribe to our newsletter!", "Multi-head attention…")
-	got, usage, err := js.client().FilterChunks(context.Background(), Ask{Query: "how do transformers work"}, chunks)
+	got, usage, err := js.client().FilterChunks(context.Background(), Ask{Query: "how do transformers work", Goal: "learn attention"}, chunks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,12 +42,17 @@ func TestFilterChunksBatchesOnePage(t *testing.T) {
 		t.Errorf("questions = %d, want one per chunk", len(req.Questions))
 	}
 	q := req.Questions[ChunkKey(1)]
-	if q.Type != TypeNoul || !strings.Contains(q.Instructions, "Subscribe to our newsletter!") || !strings.Contains(q.Instructions, "how do transformers work") || !strings.Contains(q.Instructions, `"chunk_1"`) {
+	if q.Type != TypeNoul || !strings.Contains(q.Instructions, `"chunk_1"`) {
 		t.Errorf("question = %+v", q)
+	}
+	for _, duplicated := range []string{"Subscribe to our newsletter!", "how do transformers work", "learn attention"} {
+		if strings.Contains(q.Instructions, duplicated) {
+			t.Errorf("question should point to state, not duplicate %q:\n%s", duplicated, q.Instructions)
+		}
 	}
 	state, _ := req.State.(map[string]any)
 	items, _ := state["chunks"].([]any)
-	if state["query"] != "how do transformers work" || len(items) != 3 {
+	if state["query"] != "how do transformers work" || state["goal"] != "learn attention" || len(items) != 3 {
 		t.Errorf("state = %+v", state)
 	}
 	first, _ := items[0].(map[string]any)
@@ -102,7 +107,8 @@ func TestPlanChunkBatchesRespectsBudget(t *testing.T) {
 	for i := range chunks {
 		chunks[i] = Chunk{Text: big}
 	}
-	batches := planChunkBatches(chunks, 300)
+	const fixed = 100
+	batches := planChunkBatches(chunks, 300, fixed)
 	if len(batches) < 2 {
 		t.Fatalf("expected several batches, got %d", len(batches))
 	}
@@ -118,9 +124,9 @@ func TestPlanChunkBatchesRespectsBudget(t *testing.T) {
 		if n := b.hi - b.lo; n > MaxChunksPerBatch {
 			t.Errorf("batch of %d exceeds cap %d", n, MaxChunksPerBatch)
 		}
-		est := 0
+		est := fixed
 		for i := b.lo; i < b.hi; i++ {
-			est += 2*estimateTokens(chunks[i].Text) + 300
+			est += estimateTokens(chunks[i].Text) + estimateTokens(chunks[i].Before) + 300
 		}
 		if est > ChunkBatchTokenBudget && b.hi-b.lo > 1 {
 			t.Errorf("batch %+v estimated at %d tokens, over budget %d", b, est, ChunkBatchTokenBudget)
@@ -133,7 +139,7 @@ func TestPlanChunkBatchesRespectsBudget(t *testing.T) {
 
 // A single chunk larger than the whole budget still has to be sent, not dropped.
 func TestPlanChunkBatchesOversizedSingleChunk(t *testing.T) {
-	batches := planChunkBatches(textChunks(strings.Repeat("c", 400000), "small"), 300)
+	batches := planChunkBatches(textChunks(strings.Repeat("c", 400000), "small"), 300, 100)
 	if len(batches) != 2 || batches[0] != (chunkBatch{0, 1}) || batches[1] != (chunkBatch{1, 2}) {
 		t.Errorf("batches = %+v", batches)
 	}
@@ -279,7 +285,8 @@ func textChunks(texts ...string) []Chunk {
 	return out
 }
 
-// Before reaches the request as labeled context, separate from the chunk.
+// Before reaches the request as labeled context, separate from the chunk, and
+// neither is copied into the question.
 func TestFilterChunksSendsBeforeAsContext(t *testing.T) {
 	js := newJevServer(t, func(req SystemOneRequest) (int, any) {
 		answers := map[string]Answer{}
@@ -302,10 +309,10 @@ func TestFilterChunksSendsBeforeAsContext(t *testing.T) {
 		t.Errorf("state should carry before only where set: %+v", items)
 	}
 	q := req.Questions[ChunkKey(1)].Instructions
-	if !strings.Contains(q, "Preceding text") || !strings.Contains(q, "tail of first") || strings.Index(q, "tail of first") > strings.Index(q, "second") {
-		t.Errorf("question should show the context, labeled, before the chunk:\n%s", q)
+	if !strings.Contains(q, `"chunk_1"`) || strings.Contains(q, "tail of first") || strings.Contains(q, "second") {
+		t.Errorf("question should point to the state without duplicating it:\n%s", q)
 	}
-	if q0 := req.Questions[ChunkKey(0)].Instructions; strings.Contains(q0, "Preceding text") {
-		t.Errorf("first chunk has no context:\n%s", q0)
+	if second["text"] != "second" {
+		t.Errorf("state should carry the judged text: %+v", second)
 	}
 }

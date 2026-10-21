@@ -158,7 +158,9 @@ func TestEmbeddedPrompts(t *testing.T) {
 		case ThemeCoverage:
 			needles = []string{"Q", "TH", "result_0"}
 		case ChunkRelevance:
-			needles = []string{"Q", "CHUNK", "result_0"}
+			// The query and chunk live in request state; repeating either in
+			// every question wastes input tokens.
+			needles = []string{"result_0"}
 		case DuplicatePair:
 			needles = []string{"Q", "S", "result_0"}
 		}

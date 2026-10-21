@@ -45,7 +45,7 @@ The pipeline: search providers → fold exact duplicates → Jev scores each res
 | `--max-chars N` | with `--scrape`, cap text per page (default 50000) |
 | `--summarize` | with `--scrape`, replace each page's kept text with a short summary from a small model; see `summarize` |
 | `--summarize-command CMD`, `--summarize-model NAME` | one-run overrides of `summarize.command` and `summarize.model` |
-| `--chunk-chars N` | with `--filter-chunks`, chunk size in characters (default 2000); each chunk is judged with 20% overlap from the previous one |
+| `--chunk-chars N` | with `--filter-chunks`, chunk size in characters (default 2000); each chunk is judged with 10% overlap from the previous one |
 | `--json` | JSON array on stdout; diagnostics stay on stderr |
 | `--urls-only` | one URL per line |
 | `-v, --verbose` | show scores, probabilities, dropped results, and every cooldown notice |

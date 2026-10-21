@@ -14,15 +14,16 @@ import (
 )
 
 // Chunk-filter batching. A page is split into chunks of ~2,000 characters,
-// and every chunk needs its own yes/no question. Sending them all in one
-// request is what Jev rejects with max_tokens_exceeded on a long page, so
-// chunks are packed into several requests that each stay under a token
-// budget, and those requests run in parallel.
+// and every chunk needs its own yes/no question. The chunk lives once in the
+// request state and the question points to it by id, following the measured
+// state-pointer design from github.com/dorkitude/skimmer. Sending every chunk
+// in one request is what Jev rejects with max_tokens_exceeded on a long page,
+// so chunks are packed into requests that stay under a token budget and run
+// in parallel.
 const (
 	// ChunkBatchTokenBudget is the estimated-token ceiling for one
-	// chunk-filter request. Each chunk costs roughly twice its own length
-	// (its text appears in the request state and again in its rendered
-	// question) plus the prompt boilerplate. Measured failures against
+	// chunk-filter request. Each chunk appears once in the state, plus a
+	// short question that refers to it by id. Measured failures against
 	// jev-latest began between 54 and 81 chunks of ~2,000 characters, so
 	// this leaves generous headroom and buys parallelism besides.
 	ChunkBatchTokenBudget = 24000
@@ -105,19 +106,18 @@ func tooLarge(err error) bool {
 type chunkBatch struct{ lo, hi int } // chunks[lo:hi]
 
 // planChunkBatches packs chunks into batches that each stay under the token
-// budget. perChunkOverhead is the estimated fixed cost of one rendered
-// question; every batch holds at least one chunk, however large it is.
-func planChunkBatches(chunks []Chunk, perChunkOverhead int) []chunkBatch {
+// budget. perChunkOverhead is the fixed cost of one rendered question;
+// fixedOverhead is the query, goal, and request envelope paid once per
+// batch. Every batch holds at least one chunk, however large it is.
+func planChunkBatches(chunks []Chunk, perChunkOverhead, fixedOverhead int) []chunkBatch {
 	var batches []chunkBatch
-	lo, used := 0, 0
+	lo, used := 0, fixedOverhead
 	for i, ch := range chunks {
-		// The chunk text and its context are sent twice: once in state,
-		// once in the question.
-		cost := 2*(estimateTokens(ch.Text)+estimateTokens(ch.Before)) + perChunkOverhead
+		cost := estimateTokens(ch.Text) + estimateTokens(ch.Before) + perChunkOverhead
 		full := i > lo && (used+cost > ChunkBatchTokenBudget || i-lo >= MaxChunksPerBatch)
 		if full {
 			batches = append(batches, chunkBatch{lo, i})
-			lo, used = i, 0
+			lo, used = i, fixedOverhead
 		}
 		used += cost
 	}
@@ -152,13 +152,14 @@ func (c *Client) FilterChunks(ctx context.Context, ask Ask, chunks []Chunk) ([]*
 
 	// Render one question to measure the boilerplate, so the batch plan
 	// budgets for the real prompt rather than a guess.
-	probe, err := p.Render(prompts.Data{Query: ask.Query, Goal: ask.Goal, Chunk: "", Before: " ", ID: ChunkKey(0), Index: 0})
+	probe, err := p.Render(prompts.Data{ID: ChunkKey(0), Index: 0})
 	if err != nil {
 		return nil, Usage{}, err
 	}
 	perChunkOverhead := estimateTokens(probe) + chunkEnvelopeTokens
+	fixedOverhead := estimateTokens(ask.Query) + estimateTokens(ask.Goal) + chunkBatchEnvelopeTokens
 
-	batches := planChunkBatches(chunks, perChunkOverhead)
+	batches := planChunkBatches(chunks, perChunkOverhead, fixedOverhead)
 
 	var (
 		mu       sync.Mutex
@@ -206,6 +207,10 @@ func (c *Client) FilterChunks(ctx context.Context, ask Ask, chunks []Chunk) ([]*
 // instructions (key, type, quoting) plus the chunk's state entry.
 const chunkEnvelopeTokens = 24
 
+// chunkBatchEnvelopeTokens covers the state and questions objects around the
+// query, goal, and item arrays. It is deliberately conservative.
+const chunkBatchEnvelopeTokens = 32
+
 // filterChunkRange sends chunks[b.lo:b.hi] as one request and writes the
 // verdicts into out. A request rejected for size is split in half and
 // retried, down to a single chunk. On failure it returns the indices left
@@ -216,7 +221,7 @@ func (c *Client) filterChunkRange(ctx context.Context, ask Ask, p *prompts.Promp
 	for i := b.lo; i < b.hi; i++ {
 		id := ChunkKey(i)
 		state.Chunks = append(state.Chunks, chunkItem{ID: id, Before: chunks[i].Before, Text: chunks[i].Text})
-		instructions, err := p.Render(prompts.Data{Query: ask.Query, Goal: ask.Goal, Chunk: chunks[i].Text, Before: chunks[i].Before, ID: id, Index: i})
+		instructions, err := p.Render(prompts.Data{ID: id, Index: i})
 		if err != nil {
 			return Usage{}, missing(b), err
 		}

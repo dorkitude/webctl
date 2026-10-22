@@ -43,7 +43,7 @@ type firecrawlResponse struct {
 
 // Search implements Provider.
 func (f *Firecrawl) Search(ctx context.Context, query string, numResults int) ([]SearchResult, error) {
-	body := map[string]any{"query": query, "limit": clampNum(numResults, 20), "integration": "webctl"}
+	body := map[string]any{"query": query, "limit": clampNum(numResults, 20), "integration": "_webctl"}
 	var headers map[string]string
 	if f.apiKey != "" {
 		headers = map[string]string{"Authorization": "Bearer " + f.apiKey}

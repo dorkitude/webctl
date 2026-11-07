@@ -47,9 +47,11 @@ func (p *Parallel) Keyless() bool { return p.apiKey == "" }
 // Name implements Provider.
 func (p *Parallel) Name() string { return "parallel" }
 
+// parallelRequest is the keyed REST body. The API requires search_queries
+// and rejects extra fields like query and max_results; it takes no result
+// limit, so the limit is applied locally.
 type parallelRequest struct {
-	Query      string `json:"query"`
-	MaxResults int    `json:"max_results"`
+	SearchQueries []string `json:"search_queries"`
 }
 
 // parallelResult is decoded leniently: Parallel has shipped both a single
@@ -71,13 +73,17 @@ func (p *Parallel) Search(ctx context.Context, query string, numResults int) ([]
 	if p.Keyless() {
 		return p.searchMCP(ctx, query, numResults)
 	}
-	req := parallelRequest{Query: query, MaxResults: clampNum(numResults, 100)}
+	req := parallelRequest{SearchQueries: []string{query}}
 	var resp parallelResponse
 	if err := postJSON(ctx, p.client, "Parallel", p.baseURL+"/v1/search", p.headers(), req, &resp); err != nil {
 		return nil, err
 	}
+	limit := clampNum(numResults, 100)
 	out := make([]SearchResult, 0, len(resp.Results))
 	for _, r := range resp.Results {
+		if len(out) >= limit {
+			break
+		}
 		if sr, ok := toSearchResult(r); ok {
 			out = append(out, sr)
 		}
@@ -143,7 +149,7 @@ func (p *Parallel) Validate(ctx context.Context) error {
 		_, err := p.searchMCP(ctx, "hello world", 1)
 		return err
 	}
-	req := parallelRequest{Query: "hello world", MaxResults: 1}
+	req := parallelRequest{SearchQueries: []string{"hello world"}}
 	return postJSON(ctx, p.client, "Parallel", p.baseURL+"/v1/search", p.headers(), req, nil)
 }
 
